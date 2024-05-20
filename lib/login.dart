@@ -1,76 +1,48 @@
-import 'dart:convert';
-import 'dart:html';
-
 import 'package:flutter/material.dart';
 import "package:http/http.dart" as http;
+import 'package:login_reg/homepage.dart';
 
 class login extends StatefulWidget {
-  const login({Key? key});
+  const login({super.key});
 
   @override
   State<login> createState() => _loginState();
 }
 
 class _loginState extends State<login> {
-  final _formKey = GlobalKey<FormState>();
-
-  TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
+
   TextEditingController passwordController = TextEditingController();
   bool isloading = false;
-
-  register() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        setState(() {
-          isloading = true;
-        });
-        final body = {
-          "name": nameController.text,
-          "email": emailController.text,
-          "phone": phoneController.text,
-          "password": passwordController.text
-        };
+  final Formkey = GlobalKey<FormState>();
+  loginn(String email, String password) async {
+    try {
+      setState(() {
+        isloading = true;
+      });
+      if (emailController.text == null && passwordController.text == null) {
+        print("all fields are required");
+      } else {
+        final body = {"email": email, "password": password};
+        print(body);
         final response = await http.post(
-          Uri.parse("http://192.168.5.172/api/registration.php"),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(body),
-        );
+            Uri.parse("http://192.168.5.184:5000/api/auth/login"),
+            body: body);
 
-        print("Response Status Code: ${response.statusCode}");
-        if (response.statusCode == 200) {
+        setState(() {
+          isloading = false;
+        });
+        print("Response Status Code: ${response.body}");
+        if (response.statusCode == 201) {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => homepage()));
           print("Response Body: ${response.body}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Registration successful'),
-              backgroundColor: Colors.green,
-            ),
-          );
         } else {
           print("Failed with status code: ${response.statusCode}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Registration failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
-        setState(() {
-          isloading = false;
-        });
-      } catch (e) {
-        print("Error: $e");
-        setState(() {
-          isloading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('An error occurred. Please try again later.'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
+    } catch (e) {
+      print("Error: $e");
     }
   }
 
@@ -78,97 +50,87 @@ class _loginState extends State<login> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registration Page'),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/background_image.jpg"),
-            fit: BoxFit.cover,
-          ),
+        backgroundColor: Color.fromARGB(255, 40, 172, 7),
+        title: const Text(
+          'login Page',
+          style: TextStyle(color: Colors.white),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+      ),
+      body: Padding(
+        padding:
+            const EdgeInsetsDirectional.symmetric(horizontal: 20, vertical: 40),
+        child: Form(
+          key: Formkey,
+          child: Column(
+            children: [
+              Image.asset(
+                "assets/216.jpg",
+                scale: 7,
+                filterQuality: FilterQuality.high,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    "Login",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Name is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                TextFormField(
-                  controller: emailController,
-                  decoration: InputDecoration(
+                ],
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TextFormField(
+                controller: emailController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Email is required';
+                  }
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                      .hasMatch(value)) {
+                    return 'Enter a valid email address';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email is required';
-                    }
-
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                TextFormField(
-                  controller: phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Phone is required';
-                    }
-
-                    return null;
-                  },
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                TextFormField(
-                  controller: passwordController,
-                  decoration: InputDecoration(
+                        borderRadius: BorderRadius.circular(10))),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TextFormField(
+                controller: passwordController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password is required';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters long';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
                     labelText: 'Password',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Password is required';
-                    }
-
-                    return null;
+                        borderRadius: BorderRadius.circular(10))),
+                obscureText: true,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStatePropertyAll(Colors.greenAccent)),
+                  onPressed: () {
+                    if (Formkey.currentState!.validate())
+                      loginn(emailController.text, passwordController.text);
                   },
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: register,
                   child: isloading
                       ? Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -176,10 +138,8 @@ class _loginState extends State<login> {
                             color: Colors.blue,
                           ),
                         )
-                      : Text('Register'),
-                ),
-              ],
-            ),
+                      : Text('login')),
+            ],
           ),
         ),
       ),
